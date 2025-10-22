@@ -4,3 +4,4 @@
 /gtkwave
 /.idea
 main.spec
+__pycache__/
