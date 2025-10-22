@@ -2,3 +2,5 @@
 /dist
 /ghdl
 /gtkwave
+/.idea
+main.spec
