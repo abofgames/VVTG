@@ -6,7 +6,7 @@ import os
 import sys
 import shutil
 
-from core.ports import extract
+from core.ports import extract, extract_component_names
 from core.generate import make_copy, replace
 from core.command import run_ghdl_analyze, run_ghdl_elaborate, run_ghdl_simulate, run_gtkwave
 
@@ -29,6 +29,7 @@ class TestbenchLogic:
         # States
         self.component_file_path = None
         self.file_data = None
+        self.used_component = None
         self.entity_name = None
         self.num_ports = []
         self.port_type = []
@@ -115,6 +116,7 @@ class TestbenchLogic:
             
             # Parse VHDL file
             self.file_data = extract(file_path)
+            self.used_component = extract_component_names(file_path)
             self.port_type = list(self.file_data[0].values())
             self.num_ports = list(self.file_data[0].keys())
             self.entity_name = self.file_data[2]
@@ -266,6 +268,8 @@ class TestbenchLogic:
             os.chdir(component_dir)
             
             # GHDL workflow
+            for i in self.used_component:
+                run_ghdl_analyze(self.ghdl, os.path.basename(i + ".vhd"))
             run_ghdl_analyze(self.ghdl, os.path.basename(self.component_file_path))
             run_ghdl_analyze(self.ghdl, os.path.basename(tb_file_path))
             run_ghdl_elaborate(self.ghdl, self.entity_name[1])
