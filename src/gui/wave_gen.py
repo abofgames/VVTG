@@ -26,35 +26,35 @@ class WaveGenCanvas(tk.Frame):
 
         # Scrollable canvas frame
         canvas_frame = tk.Frame(self)
-        canvas_frame.pack(fill="x")
+        canvas_frame.pack(fill="x", expand=True)
 
-        self.scrollbar = tk.Scrollbar(canvas_frame, orient="horizontal")
-        self.scrollbar.pack(side="top", fill="x")
+        self.scrollbar_x = tk.Scrollbar(canvas_frame, orient="horizontal")
+        self.scrollbar_x.pack(side="top", fill="x")
 
         clck_frame = tk.Frame(canvas_frame)
-        clck_frame.pack(fill="x")
+        clck_frame.pack(fill="x", expand=True)
         clck_label = tk.Label(clck_frame, text="clock", width=20)
         clck_label.pack(side="left")
 
         # Waveform canvas
         self.canvas = tk.Canvas(clck_frame, height=self.canvas_height, bg="black",
-                                xscrollcommand=self.scrollbar.set)
+                                xscrollcommand=self.scrollbar_x.set)
         self.canvas.pack(fill="x", expand=True)
 
         # Overlay canvases
         for i in range(len(self.num_overlays)):
             line_frame = tk.Frame(canvas_frame)
-            line_frame.pack(fill="x")
+            line_frame.pack(fill="x", expand=True)
             name_label = tk.Label(line_frame, text=num_overlays[i], width=20)
             name_label.pack(side="left")
             overlay = tk.Canvas(line_frame, height=self.canvas_height, bg="black",
-                                xscrollcommand=self.scrollbar.set)
+                                xscrollcommand=self.scrollbar_x.set)
             overlay.pack(fill="x", expand=True)
             overlay.bind("<Button-1>", lambda e, idx=i: self.on_click(e, idx))
             self.overlay_canvases.append(overlay)
 
         # Link scrollbar to all canvases
-        self.scrollbar.config(command=self.sync_scroll)
+        self.scrollbar_x.config(command=self.sync_scroll)
 
         self.draw_wave()
         self.draw_all_overlays()

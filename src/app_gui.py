@@ -36,7 +36,6 @@ class VHDLTestbenchGUI:
             self.logic.load_vhdl_file(self.file_path)
         else:
             self.component_file_name.set(self.logic.get_default_vhdl_file())
-            self._load_default_file()
         
         # Waveform canvas
         self.wave_canvas = None
@@ -52,7 +51,7 @@ class VHDLTestbenchGUI:
         """Create main window."""
         self.root = tk.Tk()
         self.root.title("Easy VHDL Test Bench Generator")
-        self.root.geometry("500x300")
+        self.root.state("zoomed")  # Windows only
                                                                              
     def _create_widgets(self):
         # Title
@@ -115,6 +114,7 @@ class VHDLTestbenchGUI:
     
     def _on_submit_clicked(self):
         """Handle Submit button click - creates/refreshes waveform editor."""
+        self._load_default_file()
         self._refresh_waveform_editor()
     
     def _on_generate_clicked(self):
@@ -142,20 +142,46 @@ class VHDLTestbenchGUI:
         
         # Create new canvas
         self._create_waveform_canvas()
-    
+
     def _create_waveform_canvas(self):
-        """Create waveform editor canvas."""
+        """Create waveform editor canvas with vertical scroll support."""
         # Get port names from loaded file
         num_ports = self.logic.get_input_port_names()
         port_types = self.logic.get_input_port_types()
-        
+
         if not num_ports:
             print("ERROR: No ports found. Load a VHDL file first.")
             return
-        
-        # Create waveform canvas
+
+        # Create scrollable container
+        scroll_container = tk.Frame(self.root)
+        scroll_container.pack(pady=20, fill="both", expand=True)
+
+        canvas = tk.Canvas(scroll_container)
+        scrollbar = tk.Scrollbar(scroll_container, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="both")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Frame inside canvas to hold WaveGenCanvas
+        inner_frame = tk.Frame(canvas)
+        canvas_window = canvas.create_window((0, 0), window=inner_frame, anchor="nw")
+
+        def resize_inner(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        canvas.bind("<Configure>", resize_inner)
+
+        # Update scroll region when content changes
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        inner_frame.bind("<Configure>", on_configure)
+
+        # Create waveform canvas inside the scrollable frame
         self.wave_canvas = WaveGenCanvas(
-            self.root,
+            inner_frame,
             self.high_time.get(),
             self.low_time.get(),
             self.test_length.get(),
@@ -163,8 +189,8 @@ class VHDLTestbenchGUI:
             num_ports,
             port_types
         )
-        self.wave_canvas.pack(pady=20, fill="x")
-        
+        self.wave_canvas.pack(pady=20, fill="both", expand=True)
+
         # Add Generate button to canvas
         generate_btn = tk.Button(
             self.wave_canvas,
@@ -172,9 +198,9 @@ class VHDLTestbenchGUI:
             command=self._on_generate_clicked
         )
         generate_btn.pack(pady=20)
-        
+
         self.dynamic_widgets.append(self.wave_canvas)
-    
+
     def run(self):
         """Start the GUI main loop."""
         self.root.mainloop()
